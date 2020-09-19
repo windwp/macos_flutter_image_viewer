@@ -1,0 +1,14 @@
+
+
+#
+# View set image 
+#
+
+http://localhost:8765
+GET /?image=/Users/letrieu/Downloads/256x256bb.jpg&aa=''
+
+#
+# View set image 
+z#
+http://localhost:8765
+GET /?x=1100&y=30&width=300&height=300
