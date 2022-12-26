@@ -132,9 +132,13 @@ class _MyHomePageState extends State<MyHomePage> {
       return Image.asset('assets/empty.jpg', fit: BoxFit.cover);
     }
     if (mediaUrl.endsWith(".mp4") || mediaUrl.contains('googlevideo.com')) {
-      player.open(
-        Media.network(mediaConfig.mediaUrl),
-      );
+      if (mediaUrl.startsWith("http")) {
+        player.open(
+          Media.network(mediaUrl),
+        );
+      } else {
+        player.open(Media.file(File(mediaUrl)));
+      }
       return Video(
         player: player,
         scale: 1.0, // default
