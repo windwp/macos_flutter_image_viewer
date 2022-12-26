@@ -3,6 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  dart_vlc
+  desktop_webview_window
   menubar
   window_size
 )

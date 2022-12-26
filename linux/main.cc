@@ -4,14 +4,14 @@
 int main(int argc, char** argv) {
   int x = 0;
   int y = 0;
-  int width=10;
-  int height=10;
+  int width=100;
+  int height=100;
 
-  if(argc >= 4){
-    x      = std::stoi(argv[1]);
-    y      = std::stoi(argv[2]);
-    width  = std::stoi(argv[3]);
-    height = std::stoi(argv[4]);
+  if(argc >= 5){
+    x      = std::stoi(argv[2]);
+    y      = std::stoi(argv[3]);
+    width  = std::stoi(argv[4]);
+    height = std::stoi(argv[5]);
   };
 
   g_autoptr(MyApplication) app = my_application_new(x, y, width, height);

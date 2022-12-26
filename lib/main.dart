@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/material.dart';
 import 'package:window_size/window_size.dart';
 
@@ -6,17 +8,29 @@ setAppSize(double x, double y, double width, double height) {
   setWindowFrame(Rect.fromLTWH(x, y, width, height));
 }
 
-const PORT = 87650;
+const port = 8765;
+bool isUsingVlc = false;
 void main(List<String> args) {
   final config = AppConfig(
-    width: double.parse(args[0]),
-    height: double.parse(args[1]),
-    x: double.parse(args[2]),
-    y: double.parse(args[3]),
-    mediaUrl: args[4],
+    width: 0,
+    height: 0,
+    x: 100,
+    y: 100,
+    mediaUrl: "",
   );
+  if (args.length > 4) {
+    config.mediaUrl = args[0];
+    config.width = double.parse(args[1]);
+    config.height = double.parse(args[2]);
+    config.x = double.parse(args[3]);
+    config.y = double.parse(args[4]);
+  }
 
-  debugPrint('config: $config');
+  if (Platform.isWindows || Platform.isLinux) {
+    isUsingVlc = true;
+    DartVLC.initialize();
+  }
+
   runApp(MyApp(config: config));
 }
 
@@ -62,14 +76,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late AppConfig currentConfig;
-  bool isInit = false;
+  late AppConfig mediaConfig;
   HttpServer? server;
+  final player = Player(id: 69420);
+  bool isVideo = false;
 
   @override
   void initState() {
     super.initState();
-    currentConfig = widget.config.clone();
+    mediaConfig = widget.config.clone();
     listenPort();
   }
 
@@ -82,22 +97,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   listenPort() async {
-    if (isInit) return;
-    isInit = true;
-    var server = await HttpServer.bind(InternetAddress.loopbackIPv4, PORT);
+    var server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
     await for (var request in server) {
-      if (request.method == "GET") {
-        final width = request.uri.queryParameters['width'] ?? '';
-        final height = request.uri.queryParameters['height'] ?? '';
-        final x = request.uri.queryParameters['x'] ?? '';
-        final y = request.uri.queryParameters['y'] ?? '';
-        final image = request.uri.queryParameters['image'] ?? '';
-        if (width.isNotEmpty && height.isNotEmpty && x.isNotEmpty && y.isNotEmpty) {
-          setAppSize(double.parse(x), double.parse(y), double.parse(width), double.parse(height));
+      if (request.method == "POST") {
+        // Read the request body as a JSON object
+        String content = await utf8.decoder.bind(request).join();
+        var json = jsonDecode(content);
+        int width = json["width"] ?? 0;
+        int height = json['height'] ?? 0;
+        int x = json['x'] ?? 0;
+        int y = json['y'] ?? 0;
+        final mediaUrl = json['media'] ?? '';
+
+        if (width != 0 && height != 0 && x != 0 && y != 0) {
+          setAppSize(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble());
         }
-        if (image.isNotEmpty) {
+        if (mediaUrl.isNotEmpty) {
           setState(() {
-            currentConfig.mediaUrl = image;
+            mediaConfig.mediaUrl = mediaUrl;
           });
         }
       }
@@ -108,20 +125,52 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Widget displayImage() {
-    if (currentConfig.mediaUrl.isEmpty) {
+  // String lastMediaUrl = "";
+  // void viewWeb(url) async {
+  //   if (lastMediaUrl == url) {
+  //     return;
+  //   }
+  //   final webview = await WebviewWindow.create();
+  //   lastMediaUrl = url;
+  //   webview.launch(url);
+  // }
+
+  Widget displayMedia() {
+    final mediaUrl = mediaConfig.mediaUrl;
+    if (mediaUrl.isEmpty) {
       return Image.asset('assets/empty.jpg', fit: BoxFit.cover);
     }
-    if (currentConfig.mediaUrl.startsWith("http")) {
+    if (mediaUrl.endsWith(".mp4") || mediaUrl.contains('googlevideo.com')) {
+      player.open(
+        Media.network(mediaConfig.mediaUrl),
+      );
+      return Video(
+        player: player,
+        scale: 1.0, // default
+        showControls: true, // default
+      );
+    }
+    if (mediaUrl.startsWith("http")) {
       return Image.network(
-        currentConfig.mediaUrl,
-        fit: BoxFit.cover,
+        mediaUrl,
+        fit: BoxFit.fitWidth,
       );
     }
     return Image.file(
-      File(currentConfig.mediaUrl),
-      fit: BoxFit.cover,
+      File(mediaUrl),
+      fit: BoxFit.fitWidth,
     );
+  }
+
+  String getYoutubeId(String url) {
+    final RegExp exp =
+        RegExp(r'^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*');
+    final match = exp.firstMatch(url);
+    debugPrint('match.groupCount: ${match?.groupCount ?? ""}');
+    if (match != null && match.groupCount > 0) {
+      return match.group(7) ?? '';
+    }
+    return "";
   }
 
   @override
@@ -131,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: SizedBox(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
-          child: displayImage(),
+          child: displayMedia(),
         ),
       ),
     );
