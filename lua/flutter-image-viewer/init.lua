@@ -17,23 +17,28 @@ local default_config = {
         width = 600,
         height = 400
     },
-    time_view = 2000,
+    time_hide = 3000, -- time to hide process
+    youtube = true,
     autocmd = {
         enable = true,
-        filetype = { "markdown" }
+        filetypes = { "markdown" },
+        extensions = { "png", "jpg", "mp4" }
     }
 }
+
 M.base_directory = ""
 M.config = {}
-
 
 M.setup = function(opts)
     M.config = vim.tbl_extend('force', default_config, opts)
     local sourced_file = require('plenary.debug_utils').sourced_filepath()
     M.base_directory = vim.fn.fnamemodify(sourced_file, ":h:h:h")
+    if vim.loop.os_uname().sysname == "Darwin" then
+        M.config.youtube = false
+    end
     if M.config.autocmd.enable then
         vim.api.nvim_create_autocmd("Filetype", {
-            pattern = M.config.autocmd.filetype,
+            pattern = M.config.autocmd.filetypes,
             callback = function()
                 M.auto_cmd_filetype()
             end
@@ -54,47 +59,7 @@ local function debounce(timeout, callback)
     end)
 end
 
-M.auto_cmd_filetype = function()
-    vim.api.nvim_create_autocmd("CursorMoved", {
-        group = vim.api.nvim_create_augroup("flutter_image_viewer", { clear = true }),
-        callback = function()
-            local path = M.get_current_line_path()
-            if path then
-                M.show(path)
-            elseif last_image ~= "" then
-                debounce(M.config.time_view, M.kill)
-            end
-        end,
-        buffer = vim.api.nvim_get_current_buf()
-    })
-end
-
-M.get_current_line_path = function()
-    local line = vim.api.nvim_get_current_line()
-    local inline_link = line:match('!%[.-%]%(.-%)')
-    if inline_link then
-        local source = inline_link:match('%((.+)%)')
-        if source:match('^http.*youtube') then
-            return source
-        end
-        if source then
-            local path = path_join({ vim.loop.cwd(), source })
-            if string.sub(source, 1, 1) == "/" then
-                path = source
-            end
-
-            if string.sub(source, 1, 2) == "./" then
-                path = path_join({ vim.loop.cwd(), string.sub(source, 3) })
-            end
-            if vim.fn.filereadable(path) then
-                return path
-            end
-        end
-    end
-end
-
-
-M.show = function(media, opts)
+local show_media = function(media, opts)
     if last_image == media then return end
     opts = opts or {}
     last_image = media
@@ -113,6 +78,58 @@ M.show = function(media, opts)
     )
 end
 
+M.auto_cmd_filetype = function()
+    vim.api.nvim_create_autocmd("CursorMoved", {
+        group = vim.api.nvim_create_augroup("flutter_image_viewer", { clear = true }),
+        callback = function()
+            local path = M.get_current_line_path()
+            if path then
+                show_media(path)
+            elseif last_image ~= "" then
+                debounce(M.config.time_hide, M.kill)
+            end
+        end,
+        buffer = vim.api.nvim_get_current_buf()
+    })
+end
+
+local get_file_extension = function(filename)
+    local parts = vim.split(filename, "%.")
+    return parts[#parts]
+end
+
+M.get_current_line_path = function()
+    local line = vim.api.nvim_get_current_line()
+    local inline_link = line:match('!%[.-%]%(.-%)')
+    if inline_link then
+        local source = inline_link:match('%((.+)%)')
+        if M.config.youtube and source:match('^http.*youtube') then
+            return source
+        end
+        if source then
+            local extension = get_file_extension(source)
+            if not vim.tbl_contains(M.config.autocmd.extensions, extension) then
+                return
+            end
+            local path = path_join({ vim.loop.cwd(), source })
+            if string.sub(source, 1, 1) == "/" then
+                path = source
+            end
+
+            if string.sub(source, 1, 2) == "./" then
+                path = path_join({ vim.loop.cwd(), string.sub(source, 3) })
+            end
+            if vim.fn.filereadable(path) then
+                return path
+            end
+        end
+    end
+end
+
+M.show = function(media, opts)
+    show_media(media, opts)
+    debounce(M.config.time_hide,M.kill)
+end
 
 
 M.kill = function()

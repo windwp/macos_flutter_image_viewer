@@ -56,7 +56,7 @@ static void my_application_activate(GApplication* application) {
   } else {
     gtk_window_set_title(window, "image_viewer");
   }
-  gtk_window_move(window, app_options.x, app_options.y) ;
+  gtk_window_move(window, app_options.x -3, app_options.y - 3) ;
   gtk_window_set_default_size(window, app_options.width, app_options.height);
   gtk_widget_show(GTK_WIDGET(window));
 

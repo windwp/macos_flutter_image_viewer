@@ -3,12 +3,10 @@ import re
 import subprocess
 import sys
 import time
-
 import psutil
 import requests
 
 REQUEST_URL = "http://localhost:8765"
-
 APP_PATH = "./release/linux/image_viewer"
 
 
@@ -27,7 +25,19 @@ def parse_media(media: str) -> str:
     return media
 
 
-def send(media: str, x: int, y: int, width: int, height: int) -> None:
+def is_running() -> bool:
+    processes = psutil.process_iter()
+    # Iterate over the processes
+    for process in processes:
+        # Check if the process name matches "image viewer"
+        if process.name() == "image_viewer":
+            return True
+    return False
+
+def update(media: str, x: int, y: int, width: int, height: int) -> None:
+    if not is_running():
+        start(media, x, y, width, height)
+        time.sleep(0.5)
 
     requests.post(
         REQUEST_URL,
@@ -82,8 +92,7 @@ if __name__ == "__main__":
     if command == "start":
         start(media, x, y, width, height)
     if command == "send" or command == "update":
-        send(media, x, y, width, height)
+        update(media, x, y, width, height)
     if command == "kill":
         kill()
-
     pass

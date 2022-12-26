@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:dart_vlc/dart_vlc.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:window_size/window_size.dart';
 
@@ -112,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if (width != 0 && height != 0 && x != 0 && y != 0) {
           setAppSize(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble());
         }
-        if (mediaUrl.isNotEmpty) {
+        if (mediaUrl.isNotEmpty && mediaConfig.mediaUrl != mediaUrl) {
           setState(() {
             mediaConfig.mediaUrl = mediaUrl;
           });
@@ -124,16 +125,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ..close();
     }
   }
-
-  // String lastMediaUrl = "";
-  // void viewWeb(url) async {
-  //   if (lastMediaUrl == url) {
-  //     return;
-  //   }
-  //   final webview = await WebviewWindow.create();
-  //   lastMediaUrl = url;
-  //   webview.launch(url);
-  // }
 
   Widget displayMedia() {
     final mediaUrl = mediaConfig.mediaUrl;
@@ -149,16 +140,48 @@ class _MyHomePageState extends State<MyHomePage> {
         scale: 1.0, // default
         showControls: true, // default
       );
+    } else {
+      player.stop();
     }
     if (mediaUrl.startsWith("http")) {
-      return Image.network(
+      return ExtendedImage.network(
         mediaUrl,
         fit: BoxFit.fitWidth,
+        mode: ExtendedImageMode.gesture,
+        initGestureConfigHandler: (state) {
+          return GestureConfig(
+            minScale: 0.9,
+            animationMinScale: 0.7,
+            maxScale: 3.0,
+            animationMaxScale: 3.5,
+            speed: 1.0,
+            inertialSpeed: 100.0,
+            initialScale: 1.0,
+            inPageView: false,
+            initialAlignment: InitialAlignment.center,
+          );
+        },
       );
     }
-    return Image.file(
+    return ExtendedImage.file(
       File(mediaUrl),
+      width: mediaConfig.width,
+      height: mediaConfig.height,
       fit: BoxFit.fitWidth,
+      mode: ExtendedImageMode.gesture,
+      initGestureConfigHandler: (state) {
+        return GestureConfig(
+          minScale: 0.9,
+          animationMinScale: 0.7,
+          maxScale: 3.0,
+          animationMaxScale: 3.5,
+          speed: 1.0,
+          inertialSpeed: 100.0,
+          initialScale: 1.0,
+          inPageView: false,
+          initialAlignment: InitialAlignment.center,
+        );
+      },
     );
   }
 
@@ -176,6 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Center(
         child: SizedBox(
           width: MediaQuery.of(context).size.width,
