@@ -1,5 +1,16 @@
-# imageviewer
- alacritty  macos can't display image in terminal  so i write a small tool for display image. 
+# image_viewer
 
- It is **NOT** running on your terminal. It is a popup o view image 
+A new Flutter project.
 
+## Getting Started
+
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
