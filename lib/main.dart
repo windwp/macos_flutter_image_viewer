@@ -18,6 +18,7 @@ void main(List<String> args) {
     x: 100,
     y: 100,
     mediaUrl: "",
+    backgroundColor: Colors.black,
   );
   if (args.length > 4) {
     config.mediaUrl = args[0];
@@ -25,6 +26,10 @@ void main(List<String> args) {
     config.height = double.parse(args[2]);
     config.x = double.parse(args[3]);
     config.y = double.parse(args[4]);
+  }
+
+  if (args.length > 5) {
+    config.backgroundColor = hexToColor(args[5]);
   }
 
   if (Platform.isWindows || Platform.isLinux) {
@@ -35,20 +40,41 @@ void main(List<String> args) {
   runApp(MyApp(config: config));
 }
 
+Color hexToColor(String hex) {
+  try {
+    int val = int.parse(hex.substring(1), radix: 16);
+    int r = (val >> 16) & 0xFF;
+    int g = (val >> 8) & 0xFF;
+    int b = val & 0xFF;
+    return Color.fromRGBO(r, g, b, 1.0);
+  } catch (e) {
+    return Colors.black;
+  }
+}
+
 class AppConfig {
   double width;
   double height;
   double x;
   double y;
   String mediaUrl;
+  Color backgroundColor;
   AppConfig(
       {required this.width,
       required this.height,
       required this.x,
       required this.y,
-      required this.mediaUrl});
+      required this.mediaUrl,
+      required this.backgroundColor});
+
   clone() {
-    return AppConfig(width: width, height: height, x: x, y: y, mediaUrl: mediaUrl);
+    return AppConfig(
+        width: width,
+        height: height,
+        x: x,
+        y: y,
+        mediaUrl: mediaUrl,
+        backgroundColor: backgroundColor);
   }
 }
 
@@ -114,6 +140,17 @@ class _MyHomePageState extends State<MyHomePage> {
           setAppSize(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble());
         }
         if (mediaUrl.isNotEmpty && mediaConfig.mediaUrl != mediaUrl) {
+          isVideo = false;
+          if (mediaUrl.endsWith(".mp4") || mediaUrl.contains('googlevideo.com')) {
+            isVideo = true;
+            if (mediaUrl.startsWith("http")) {
+              player.open(
+                Media.network(mediaUrl),
+              );
+            } else {
+              player.open(Media.file(File(mediaUrl)));
+            }
+          }
           setState(() {
             mediaConfig.mediaUrl = mediaUrl;
           });
@@ -129,19 +166,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget displayMedia() {
     final mediaUrl = mediaConfig.mediaUrl;
     if (mediaUrl.isEmpty) {
-      return Image.asset('assets/empty.jpg', fit: BoxFit.cover);
+      return Image.asset(
+        'assets/empty.jpg',
+        fit: BoxFit.cover,
+      );
     }
-    if (mediaUrl.endsWith(".mp4") || mediaUrl.contains('googlevideo.com')) {
-      if (mediaUrl.startsWith("http")) {
-        player.open(
-          Media.network(mediaUrl),
-        );
-      } else {
-        player.open(Media.file(File(mediaUrl)));
-      }
+    if (isVideo) {
       return Video(
         player: player,
         scale: 1.0, // default
+        fillColor: mediaConfig.backgroundColor,
         showControls: true, // default
       );
     } else {
@@ -203,7 +237,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: mediaConfig.backgroundColor,
       body: Center(
         child: SizedBox(
           width: MediaQuery.of(context).size.width,

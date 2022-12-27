@@ -30,18 +30,17 @@ def parse_media(media: str) -> str:
 
 def is_running() -> bool:
     processes = psutil.process_iter()
-    # Iterate over the processes
     for process in processes:
-        # Check if the process name matches "image viewer"
         if process.name() == "image_viewer":
             return True
     return False
 
 
-def update(media: str, x: int, y: int, width: int, height: int) -> None:
-    print(media)
+def update(
+    media: str, x: int, y: int, width: int, height: int, backgroundColor: str
+) -> None:
     if not is_running():
-        start(media, x, y, width, height)
+        start(media, x, y, width, height, backgroundColor)
         time.sleep(0.5)
 
     with open("/tmp/flutter_image_viewer", "w+") as f:
@@ -63,7 +62,9 @@ def update(media: str, x: int, y: int, width: int, height: int) -> None:
     pass
 
 
-def start(media: str, x: int, y: int, width: int, height: int) -> None:
+def start(
+    media: str, x: int, y: int, width: int, height: int, backgroundColor: str
+) -> None:
     kill()
     # get current process window id
     window_id = subprocess.check_output(
@@ -77,6 +78,7 @@ def start(media: str, x: int, y: int, width: int, height: int) -> None:
             str(y),
             str(width),
             str(height),
+            backgroundColor
         ]
     )
     time.sleep(0.5)
@@ -116,17 +118,23 @@ if __name__ == "__main__":
     # reading command line arguments
     command = sys.argv[1]
     x, y, width, height = 0, 0, 0, 0
+    backgroundColor = "#000000"
     if len(sys.argv) > 2:
         media = sys.argv[2]
-    if len(sys.argv) > 5:
+    if len(sys.argv) > 6:
         x = int(sys.argv[3])
         y = int(sys.argv[4])
         width = int(sys.argv[5])
         height = int(sys.argv[6])
+    if len(sys.argv) > 7:
+        backgroundColor = sys.argv[7]
+
+    print(height)
+    print(backgroundColor)
     if command == "start":
-        start(media, x, y, width, height)
+        start(media, x, y, width, height, backgroundColor)
     if command == "send" or command == "update":
-        update(media, x, y, width, height)
+        update(media, x, y, width, height, backgroundColor)
     if command == "clear":
         clear()
     if command == "kill":
