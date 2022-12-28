@@ -22,7 +22,7 @@ local default_config = {
   time_hide = 3000, -- time to hide process
   youtube = true,
   autocmd = {
-    enable = true,
+    enabled = true,
     filetypes = { "markdown" },
     extensions = { "png", "jpg", "mp4" }
   }
@@ -38,7 +38,7 @@ M.setup = function(opts)
   if vim.loop.os_uname().sysname == "Darwin" then
     M.config.youtube = false
   end
-  if M.config.autocmd.enable then
+  if M.config.autocmd.enabled then
     vim.api.nvim_create_autocmd("Filetype", {
       pattern = M.config.autocmd.filetypes,
       callback = function()
@@ -68,7 +68,6 @@ local show_media = function(media, opts)
   opts = opts or {}
   last_image = media
   local window = vim.tbl_extend('force', M.config.window, opts.window or {})
-  print(vim.inspect(window.backgroundColor))
   uv_run(
     path_join({ M.base_directory, "main.py" }), {
       "update",
@@ -137,7 +136,10 @@ M.show = function(media, opts)
   debounce(M.config.time_hide, M.kill)
 end
 
-M.toggle = function()
+M.toggle = function(opts)
+  if opts.silent then
+    vim.notify("Loading")
+  end
   if is_show then
     M.kill()
     return
