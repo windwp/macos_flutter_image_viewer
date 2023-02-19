@@ -1,0 +1,103 @@
+{
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devPath": "http://localhost:1420",
+    "distDir": "../build",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "image-viewer",
+    "version": "0.0.0"
+  },
+  "tauri": {
+    "cli": {
+      "description": "",
+      "longDescription": "",
+      "beforeHelp": "",
+      "afterHelp": "",
+      "args": [
+        {
+          "name": "x",
+          "index": 1,
+          "takesValue": true
+        },
+        {
+          "name": "y",
+          "index": 2,
+          "takesValue": true
+        },
+        {
+          "name": "width",
+          "index": 3,
+          "takesValue": true
+        },
+        {
+          "name": "height",
+          "index": 4,
+          "takesValue": true
+        },
+        {
+          "name": "url",
+          "index": 5,
+          "takesValue": true
+        }
+      ]
+    },
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "DeveloperTool",
+      "copyright": "",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "com.tauri.dev",
+      "longDescription": "",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": [],
+      "shortDescription": "",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": "default-src *;img-src *;script-src 'unsafe-eval' 'unsafe-inline' *;style-src 'unsafe-inline' *;frame-ancestors 'self' *;frame-src 'self' *;"
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 600,
+        "resizable": true,
+        "title": "image-viewer",
+        "width": 800
+      }
+    ]
+  }
+}
