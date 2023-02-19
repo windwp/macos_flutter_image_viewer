@@ -87,7 +87,7 @@ M.auto_cmd_filetype = function()
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = vim.api.nvim_create_augroup("flutter_image_viewer", { clear = true }),
     callback = function()
-      local path = M.get_current_line_path()
+      local path = M.get_media_path()
       if path then
         show_media(path)
       elseif last_image ~= "" then
@@ -103,14 +103,15 @@ local get_file_extension = function(filename)
   return parts[#parts]
 end
 
-M.get_current_line_path = function()
+M.get_media_path = function()
   local line = vim.api.nvim_get_current_line()
   local inline_link = line:match('!%[.-%]%(.-%)')
   if inline_link then
     local source = inline_link:match('%((.+)%)')
-    if M.config.youtube and source:match('^http.*youtube') then
+    if M.config.youtube and source:match('^http.*youtu%.?be') then
       return source
     end
+
     if source then
       local extension = get_file_extension(source)
       if not vim.tbl_contains(M.config.autocmd.extensions, extension) then
@@ -137,16 +138,22 @@ M.show = function(media, opts)
 end
 
 M.toggle = function(opts)
-  if opts.silent then
-    vim.notify("Loading")
-  end
+  opts = opts or {}
   if is_show then
+    if not opts.silent then
+      vim.notify("Hide media")
+    end
     M.kill()
     return
   end
-  local path = M.get_current_line_path()
+  local path = M.get_media_path()
+  print(vim.inspect(path))
   if path then
-    show_media(path)
+
+    if not opts.silent then
+      vim.notify("Show media")
+    end
+    show_media(path, opts)
   end
 end
 
