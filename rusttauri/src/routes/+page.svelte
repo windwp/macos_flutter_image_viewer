@@ -56,7 +56,7 @@
         allowfullscreen
       />
     </div>
-  {:else if htmlContent}
+  {:else}
     <div>
       <iframe
         sandbox="allow-scripts allow-same-origin allow-popups allow-modals allow-forms"
@@ -93,8 +93,8 @@
   .youtube-container {
     overflow: hidden;
     /* 16:9 aspect ratio */
-    padding-top: 56.25%;
-    position: relative;
+    /* padding-top: 56.25%; */
+    /* position: relative; */
   }
 
   .youtube-container iframe {

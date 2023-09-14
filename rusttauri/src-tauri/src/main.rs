@@ -4,15 +4,8 @@
 )]
 
 use tauri::{ LogicalSize, Manager, PhysicalPosition, Position, Size};
-
-use axum::{
-    routing::{get, post},
-    http::StatusCode,
-    response::IntoResponse,
-    Json, Router,
-};
-use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
+use std::io::{BufRead, BufReader};
+use std::net::{TcpListener};
 
 struct ArgsValue {
     x: i32,
@@ -29,57 +22,39 @@ async fn get_html_content(url: String) -> String {
     let resp = reqwest::get(&url).await;
     if let Ok(resp) = resp {
         if resp.status().is_success() {
-            html = 
+            html =resp.text().await.unwrap();
         }
     }
     html.to_string()
 }
 
-async fn start_server() {
-    // initialize tracing
-    tracing_subscriber::fmt::init();
+// async fn start_server() {
+//     // initialize tracing
+//     let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
 
-    // build our application with a route
-    let app = Router::new()
-        // `GET /` goes to `root`
-        .route("/", get(root))
-        // `POST /users` goes to `create_user`
-        .route("/users", post(create_user));
+//     // Accept incoming connections
+//     for stream in listener.incoming() {
+//         // Spawn a new thread for each connection
+//         std::thread::spawn(move || {
+//             // Read incoming data from the connection
+//             let mut reader = BufReader::new(stream.unwrap());
+//             let mut buffer = String::new();
+//             reader.read_line(&mut buffer).unwrap();
 
-    // run our app with hyper
-    // `axum::Server` is a re-export of `hyper::Server`
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8567);
-    tracing::debug!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
-}
+//             // Print the incoming message
+//             println!("Received message: {}", buffer.trim());
+//         });
+//     }
+// }
 
 // basic handler that responds with a static string
 async fn root() -> &'static str {
     "Hello, World!"
 }
 
-async fn create_user(
-    // this argument tells axum to parse the request body
-    // as JSON into a `CreateUser` type
-    Json(payload): Json<CreateUser>,
-) -> (StatusCode, Json<User>) {
-    // insert your application logic here
-    let user = User {
-        id: 1337,
-        username: payload.username,
-    };
-
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
-}
-
 fn main() {
     let context = tauri::generate_context!();
-    start_server();
+    // start_server();
     tauri::Builder::default()
         .setup(|app| {
             let mut args = ArgsValue {
